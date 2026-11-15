@@ -9,6 +9,7 @@ final class DriverBridge {
 
     static final String TURNIP = "turnip";
     static final String SYSTEM = "system";
+    static final String PANVK = "panvk";
     /** "custom:NAME" loads a Vulkan driver package unpacked in drivers/NAME next to driver.txt. */
     static final String CUSTOM_PREFIX = "custom:";
 

@@ -39,10 +39,12 @@ import java.util.Locale;
  *   <li>{@code args.txt} next to the data root - one cvar per line, passed to
  *       SDL_main.</li>
  *   <li>{@code driver.txt} beside it - "system" to use the device's own Vulkan
- *       driver (recommended for Mali/Helio G85), "turnip" for bundled Turnip
- *       (Adreno only), or "custom:NAME" for a driver package.</li>
+ *       driver, "turnip" for bundled Turnip (Adreno only), "panvk" for the
+ *       FristOneRR PanVK driver (Mali-G52 MC2 / Helio G85), or "custom:NAME"
+ *       for a driver package.</li>
  *   <li>{@code env.txt} - optional NAME=value lines exported before the Vulkan
- *       driver loads (e.g. PAN_I_WANT_A_BROKEN_VULKAN_DRIVER=1 for PanVK on Mali).</li>
+ *       driver loads (e.g. PAN_I_WANT_A_BROKEN_VULKAN_DRIVER=1 for PanVK on Mali,
+ *       PANVK_HEAP_MB=2048, PANVK_ATOM_STRIDE=56).</li>
  * </ul>
  */
 public class MclaActivity extends SDLActivity {
@@ -184,7 +186,16 @@ public class MclaActivity extends SDLActivity {
             }
         }
         // Read env.txt for optional environment variables (e.g. PAN_I_WANT_A_BROKEN_VULKAN_DRIVER=1).
-        applyEnvironmentFile(new File(dataRoot, "env.txt"));
+        File envFile = new File(dataRoot, "env.txt");
+        if (!envFile.isFile()) {
+            // First launch: copy bundled environment defaults.
+            try {
+                copyAssetTree(getAssets(), "default_env.txt", envFile);
+            } catch (IOException e) {
+                Log.e(TAG, "writing default env failed", e);
+            }
+        }
+        applyEnvironmentFile(envFile);
         // Read args.txt for cvars passed to SDL_main.
         File argsFile = new File(dataRoot, "args.txt");
         if (!argsFile.isFile()) {
@@ -232,6 +243,8 @@ public class MclaActivity extends SDLActivity {
                     + driver.substring(DriverBridge.CUSTOM_PREFIX.length()).trim();
         } else if (lower.equals(DriverBridge.SYSTEM)) {
             mDriverMode = DriverBridge.SYSTEM;
+        } else if (lower.equals(DriverBridge.PANVK)) {
+            mDriverMode = DriverBridge.PANVK;
         } else if (!lower.isEmpty() && !lower.equals(DriverBridge.TURNIP)) {
             Log.w(TAG, "unknown driver.txt value \"" + driver + "\", using system");
             mDriverMode = DriverBridge.SYSTEM;

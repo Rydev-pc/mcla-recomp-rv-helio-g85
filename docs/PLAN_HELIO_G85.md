@@ -241,3 +241,86 @@ Objetivo: o jogo chega ao gameplay (menus + corrida curta) com taxa de quadros a
 - O `CMakePresets.json` não tem presets Android hoje; os novos presets Mali são adicionitivos e não removem os existentes.
 - O `AndroidManifest.xml` mantém `GPU_VARIANT=snapdragon` como default para não alterar o comportamento dos builds existentes.
 - Nenhum arquivo do `docs/fork-base/` (upstream) é modificado.
+
+---
+
+## Driver PanVK FristOneRR (Mali-G52 MC2 / Helio G85)
+
+O projeto [FristOneRR PanVK](https://github.com/FristOneRR/FristOneRR-Panvk-Driver) é um driver PanVK (Mesa 27) para GPUs Mali com kernel kbase, licença MIT. Já foi testado e funciona em dispositivos com **Mali-G52 MC2 (Helio G85)**, incluindo Oppo A38, Xiaomi Redmi 13C e RGVITA tablet.
+
+| Item | Detalhe |
+|------|---------|
+| Fonte | https://github.com/FristOneRR/FristOneRR-Panvk-Driver |
+| Versão testada | 3.7.0 (Mesa 27) |
+| Licença | MIT |
+| Dispositivos G52 confirmados | Oppo A38, Xiaomi Redmi 13C, RGVITA (Unisoc T618) |
+| Download | `PanVK-FristOneRR-V.3.7.0.zip` (não descompactar) |
+
+### Como usar no MCLA
+
+1. Baixe o zip do PanVK da página de Releases do repositório acima.
+2. Descompacte o zip em `Android/data/com.mcla.recomp/files/drivers/panvk/` no dispositivo.
+3. Crie/edit o arquivo `driver.txt` com o conteúdo `custom:panvk`.
+4. Crie/edit o arquivo `env.txt` com as variáveis recomendadas para Helio G85 (ver `app/src/main/assets/default_env.txt`):
+   - `PAN_I_WANT_A_BROKEN_VULKAN_DRIVER=1` (necessário em alguns G52)
+   - `PANVK_HEAP_MB=2048` (heap GPU para 4GB RAM)
+   - `PANVK_ATOM_STRIDE=56` (correção de inicialização em alguns G52/Exynos)
+   - `mcla_fps=30` (alvo de FPS para dispositivo de entrada)
+
+### Limitações conhecidas (Bifrost G52)
+
+- Jogos D3D11 que exigem feature level 11_0 **não iniciam** (sem tessellation/geometry shaders).
+- DXVK 2.5+ **não funciona** (usar máximo 2.4.1).
+- Jogos com 2× MSAA não conseguem criar texturas (Mali não tem 2× mode).
+- Não é uma implementação Vulkan conformante — esperar bugs e relatar no repositório do driver.
+- PanVK é **opcional e desabilitado por padrão**; o driver system Vulkan permanece como padrão.
+
+### Recomendação
+
+Usar o **driver system Vulkan** como padrão (mais estável) e oferecer o **PanVK FristOneRR** como alternativa experimental para usuários avançados, via `driver.txt` com `custom:panvk`.
+
+---
+
+## Experimento Frame Generation (FrameGen)
+
+O documento `FrameGen.txt` (baixado em `/sdcard/Download/Framegen.txt`) propõe um experimento de **interpolação de frames por software** para o MCLA no Helio G85.
+
+### Objetivos do experimento
+
+1. Investigar técnicas de frame interpolation.
+2. Avaliar optical flow e motion vectors.
+3. Investigar integração com o pipeline gráfico existente.
+4. Avaliar compatibilidade com Vulkan e Mali.
+5. Medir custo de CPU, GPU e memória.
+6. Investigar artefatos em cenas de corrida, movimento de câmera e objetos rápidos.
+
+### Três modos propostos
+
+| Modo | Descrição |
+|------|-----------|
+| **OFF** | Renderização original, sem interpolação. |
+| **FG 2X** | Interpolação de um frame intermediário (dobra a taxa aparente). |
+| **AUTO** | Habilita interpolação somente quando houver orçamento de processamento suficiente. |
+
+### Regras obrigatórias
+
+- Não confundir upscaling com frame generation.
+- Não anunciar FPS interpolados como FPS reais.
+- Não comprometer a simulação física.
+- Não introduzir latência excessiva.
+- Não prejudicar os controles.
+- Não implementar soluções que ultrapassem o orçamento de memória do A06 (4GB RAM).
+- Fazer benchmark comparativo com frame generation ligado e desligado.
+
+### Próximo passo
+
+Antes de implementar, apresentar um **relatório de viabilidade** e estimativa de custo computacional, incluindo:
+- Custo de CPU para interpolator de frames.
+- Custo de GPU para renderização dos frames interpolados.
+- Impacto na memória (4GB RAM é restrito).
+- Estimativa de latência introduzida.
+- Artefatos esperados em cenas de corrida (movimento rápido de câmera e objetos).
+
+---
+
+- Fim do plano -

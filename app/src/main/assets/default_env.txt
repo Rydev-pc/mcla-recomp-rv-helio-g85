@@ -1,0 +1,30 @@
+# Ambiente padrão para Helio G85 / Mali-G52 MC2 (4 GB RAM)
+# Copie para env.txt e edite conforme necessário.
+# Linhas iniciando com # são comentários.
+
+# Habilita PanVK (driver Vulkan experimental para Mali baseado em kbase)
+# Necessário em alguns dispositivos Mali-G52 para o driver iniciar
+PAN_I_WANT_A_BROKEN_VULKAN_DRIVER=1
+
+# Memória GPU reportada aos jogos (MB)
+# Em aparelhos de 4 GB RAM, 2048 pode ajudar em jogos pesados
+# Reduza se o Android matar o aplicativo por falta de memória
+PANVK_HEAP_MB=2048
+
+# Heap de geometria/tesselação (MB)
+PANVK_POLY_HEAP_MB=16
+
+# Heap do tiler (MB)
+PANVK_TILER_HEAP_MB=512
+
+# Corrija triângulos pretos / luzes ausentes em alguns jogos
+# Ative apenas se houver artefatos; pode deixar o jogo mais escuro e lento
+PANVK_STENCIL_LATE=0
+
+# Corrija dispositivos onde o driver não inicia (alguns Exynos e G52)
+# Defina 56 se o PanVK não carregar no seu aparelho
+PANVK_ATOM_STRIDE=56
+
+# Limite de frames (FPS) — defina conforme o perfil escolhido
+# mcla_fps=30 para perfil de desempenho, mcla_fps=60 para qualidade
+mcla_fps=30

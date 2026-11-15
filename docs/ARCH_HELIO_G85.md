@@ -322,6 +322,45 @@ Fase 5 — Validação: APK assinado com package ID distinto, teste em Helio G85
 
 ---
 
+## ADR-007 — Driver PanVK FristOneRR como alternativa experimental para Mali-G52
+
+### Contexto
+
+O driver stock Mali no Helio G85 não expõe `vertexPipelineStoresAndAtomics`, fazendo o renderizador rejeitar draws. O PanVK testado anteriormente (Mesa 26.3.0-devel) falha na criação do swapchain Android com `VK_ERROR_INVALID_EXTERNAL_HANDLE` (WSI/gralloc). O projeto upstream removeu o suporte Mali e não mantém roadmap de PanVK.
+
+Um driver PanVK alternativo foi encontrado: [FristOneRR PanVK v3.7.0](https://github.com/FristOneRR/FristOneRR-Panvk-Driver), baseado em Mesa 27, construído especificamente para GPUs Mali com kernel kbase. Já foi testado e funciona em dispositivos com Mali-G52 MC2 (Helio G85): Oppo A38, Xiaomi Redmi 13C, RGVITA (Unisoc T618).
+
+### Decisão
+
+Adicionar o PanVK FristOneRR como uma **terceira opção** de driver Vulkan para o Helio G85, ao lado do driver system Vulkan (padrão) e do driver stock Mali com fallback de compute shader:
+
+- **Driver system Vulkan (padrão)**: mais estável, mas pode não expor `vertexPipelineStoresAndAtomics`.
+- **Driver stock Mali + fallback**: compute shader para vertex-shader memory export quando a feature não estiver disponível.
+- **PanVK FristOneRR (experimental)**: Vulkan 1.3 funcional no Mali-G52, mas com limitações (sem feature level 11_0, DXVK máximo 2.4.1, não é implementação conformante).
+
+O PanVK é carregado como driver custom via `libadrenotools` (`ADRENOTOOLS_DRIVER_CUSTOM`), selecionado por `driver.txt` com `custom:panvk`. As variáveis de ambiente recomendadas são definidas em `app/src/main/assets/default_env.txt` (copiado para `env.txt` na primeira execução):
+- `PAN_I_WANT_A_BROKEN_VULKAN_DRIVER=1`
+- `PANVK_HEAP_MB=2048`
+- `PANVK_ATOM_STRIDE=56`
+- `mcla_fps=30`
+
+### Trade-offs
+
+| Opção | Prós | Contras | Alternativas consideradas | Decisão |
+|-------|------|---------|---------------------------|---------|
+| System Vulkan (padrão) | Mais estável, já funciona no Android | Pode não expor `vertexPipelineStoresAndAtomics` | PanVK FristOneRR | Usar como padrão |
+| Stock Mali + fallback | Não precisa de driver externo | Requer compute shader complexo no SDK | PanVK FristOneRR | Usar como fallback secundário |
+| PanVK FristOneRR | Vulkan 1.3 funcional, já testado em G52 | Não é Vulkan conformante, limitações de DXVK/feature level | Manter apenas stock + system | Adicionar como opção experimental, desabilitada por padrão |
+
+### Consequências
+
+- Positivo: Oferece um caminho Vulkan completo para Mali-G52 quando o driver system falha; já validado em dispositivos com a mesma GPU do alvo.
+- Negativo: Não é uma implementação conformante; pode ter bugs; requer download e instalação manual do zip do driver pelo usuário; não deve ser anunciado como suporte oficial.
+
+Quando essa decisão for implementada, atualizar este documento com o status (Aceito/Implementado/Deprecado) e a data.
+
+---
+
 ## Apêndice — Modelo de registro de decisão (ADR) usado
 
 Cada decisão acima segue o formato:
