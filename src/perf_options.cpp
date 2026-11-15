@@ -606,6 +606,38 @@ void MclaApplyPreset() {
   REXLOG_INFO("perf options: preset {}", preset);
 }
 
+// Helio G85 / Mali-G52 MC2 with 4 GB RAM: apply reduced detail defaults so the
+// game stays playable on a weak GPU with little memory. Called when
+// MCLA_TARGET_HELIO_G85 is defined (see src/mcla_app.cpp).
+void MclaApplyHelioG85Defaults() {
+  constexpr std::pair<const char*, const char*> kHelioG85[] = {
+      {"mcla_anti_aliasing", "off"},
+      {"mcla_msaa", "false"},
+      {"mcla_shadows", "false"},
+      {"mcla_foliage_shadows", "false"},
+      {"mcla_fullscreen_blur", "false"},
+      {"mcla_env_map_interval", "4"},
+      {"mcla_reflection_interval", "2"},
+      {"mcla_city_lod", "0.5"},
+      {"mcla_traffic_lod", "0.5"},
+      {"mcla_traffic_distance", "250"},
+      {"mcla_pedestrians", "0.5"},
+      {"mcla_parked_cars", "0.5"},
+      {"mcla_vinyl_readback", "false"},
+      {"mcla_rain_unscaled_copy", "false"},
+  };
+  for (const auto& [name, value] : kHelioG85) {
+    if (rex::cvar::GetFlagSource(name) != rex::cvar::Source::kDefault) {
+      continue;
+    }
+    if (!rex::cvar::SetDefaultValue(name, value)) {
+      REXLOG_WARN("helio-g85 defaults: {} = {} not taken", name, value);
+    } else {
+      REXLOG_INFO("helio-g85 defaults: {} = {}", name, value);
+    }
+  }
+}
+
 void MclaMigrateAntiAliasing() {
   if (rex::cvar::GetFlagSource("mcla_anti_aliasing") == rex::cvar::Source::kDefault &&
       !REXCVAR_GET(mcla_msaa)) {

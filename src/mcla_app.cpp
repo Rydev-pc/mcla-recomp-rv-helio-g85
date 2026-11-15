@@ -116,6 +116,9 @@ void MclaShaderStorageAfterPreload(rex::Runtime* runtime);
 void MclaMigrateAntiAliasing();  // src/perf_options.cpp
 void MclaApplyPreset();  // src/perf_options.cpp
 void MclaApplyGraphicsFixDefaults(bool vulkan);  // src/perf_options.cpp
+#if defined(MCLA_TARGET_HELIO_G85)
+void MclaApplyHelioG85Defaults();  // src/perf_options.cpp
+#endif
 
 #ifdef _WIN32
 // The pause menu's RESTART GAME (src/settings_menu.cpp) starts the game again
@@ -863,6 +866,9 @@ void MclaApp::OnPreSetup(rex::RuntimeConfig& config) {
   ApplyPcDefaults();
   MclaMigrateAntiAliasing();
   MclaApplyPreset();
+#if defined(MCLA_TARGET_HELIO_G85)
+  MclaApplyHelioG85Defaults();
+#endif
 #ifdef _WIN32
   // The GPU the game chose (ChooseGpu) is the one the SDK takes, whatever the API: d3d12_adapter
   // for Direct3D 12, vulkan_device for Vulkan (Automatic's or the player's), whose own choice
@@ -1109,6 +1115,18 @@ void MclaApp::ApplyPcDefaults() {
       // the experimental 644-line mode repeatedly faulted during loading;
       // forcing 720 in mcla.toml allowed gameplay to start.
       {"mcla_render_height", "720"},
+#if defined(MCLA_TARGET_HELIO_G85)
+      // Helio G85 / Mali-G52 MC2 with 4 GB RAM: reduce memory footprint and
+      // disable features the stock Mali driver does not support.
+      {"edram_tiles", "2048"},
+      {"gpu_memory_pressure_percent", "75"},
+      {"render_target_max_height", "720"},
+      {"anisotropic_override", "1"},
+      // Mali stock driver lacks vertexPipelineStoresAndAtomics; relax the
+      // command processor gate so draws are attempted (may fall back inside
+      // the renderer patch). Logs will show if a draw is rejected.
+      {"mcla_vulkan_mali_relax_vertex_store", "true"},
+#endif
 #endif
 #if REX_PLATFORM_WIN32
       {"d3d12_hoist_shared_memory_uploads", "true"},
