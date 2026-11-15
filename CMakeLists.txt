@@ -73,9 +73,16 @@ set(MCLA_SOURCES
 
 if(ANDROID)
     list(APPEND MCLA_SOURCES src/touch_controls.cpp)
-    # Reject obsolete build recipes instead of silently producing an Adreno APK.
-    if(MCLA_MALI_DIAGNOSTIC_APK)
-        message(FATAL_ERROR "Mali diagnostics have been retired; Android targets Snapdragon/Adreno")
+    # Target profile selection: snapdragon (default) or helio-g85 (Mali-G52, low RAM).
+    # The Mali path is experimental: stock Mali drivers lack vertexPipelineStoresAndAtomics,
+    # and PanVK has WSI/gralloc issues on Android. See docs/android-mali-driver.md.
+    if(MCLA_TARGET_PROFILE STREQUAL "helio-g85")
+        message(STATUS "MCLA: Building for Helio G85 / Mali-G52 MC2 (experimental Mali path)")
+        add_compile_definitions(MCLA_TARGET_HELIO_G85=1)
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-march=armv8-a -mtune=cortex-a75 -Os>)
+        add_link_options(-Os)
+    else()
+        message(STATUS "MCLA: Building for Snapdragon / Adreno (default)")
     endif()
 endif()
 

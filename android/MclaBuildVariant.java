@@ -11,6 +11,11 @@ final class MclaBuildVariant {
         return "redmagic-audio-test".equals(name(context));
     }
 
+    static boolean isHelioG85(Context context) {
+        String variant = name(context);
+        return "mali".equals(variant) || "helio-g85".equals(variant);
+    }
+
     private static String name(Context context) {
         try {
             Bundle metadata = context.getPackageManager().getApplicationInfo(
