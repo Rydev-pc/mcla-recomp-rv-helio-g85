@@ -1,0 +1,79 @@
+name: Build MCLA Android APK (Helio G85 / Mali-G52)
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Install NDK r27c
+        run: sdkmanager "ndk;27.2.12479018"
+      - name: Configure Android environment
+        run: echo "ANDROID_NDK=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y ninja-build cmake
+
+      - name: Clone RexGlue SDK
+        run: |
+          git clone --depth=1 https://github.com/rexglue/rexglue-sdk.git /tmp/rexglue-sdk
+          echo "REXSDK_DIR=/tmp/rexglue-sdk" >> "$GITHUB_ENV"
+
+      - name: Clone and Build SDL3
+        run: |
+          git clone --depth=1 --branch release-3.4.0 https://github.com/libsdl-org/SDL.git /tmp/SDL3
+          cmake -S /tmp/SDL3 -B /tmp/SDL3-build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-29 \
+            -DANDROID_STL=c++_shared \
+            -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TEST=OFF \
+            -DCMAKE_INSTALL_PREFIX=/tmp/sdl3-prefix \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build /tmp/SDL3-build --parallel "$(nproc)"
+          cmake --install /tmp/SDL3-build
+          mkdir -p app/src/main/jniLibs/arm64-v8a
+          cp /tmp/SDL3-build/libSDL3.so app/src/main/jniLibs/arm64-v8a/
+          echo "SDL3_DIR=/tmp/sdl3-prefix" >> "$GITHUB_ENV"
+
+      - name: Stage libc++_shared.so
+        run: |
+          cp "$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" \
+             app/src/main/jniLibs/arm64-v8a/
+
+      - name: Build driver proxy
+        run: bash -euxo pipefail scripts/build_driver_proxy.sh
+
+      - name: Build MCLA native
+        run: bash -euxo pipefail scripts/build_native.sh release
+
+      - name: Assemble APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MCLA-Android-Helio-G85-Debug
+          path: app/build/outputs/apk/debug/*.apk
+          compression-level: 0
+          retention-days: 14

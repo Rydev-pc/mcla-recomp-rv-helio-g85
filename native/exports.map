@@ -1,0 +1,15 @@
+{
+  global:;
+    JNI_OnLoad;
+    Java_com_mcla_recomp_DriverBridge_nativeInit;
+    Java_com_mcla_recomp_DriverBridge_nativeStatus;
+    vkGetInstanceProcAddr;
+    vkCreateInstance;
+    vkDestroyInstance;
+    vkGetDeviceProcAddr;
+    vkEnumerateInstanceVersion;
+    vkEnumerateInstanceExtensionProperties;
+    vkEnumerateInstanceLayerProperties;
+  local:;
+    *;
+};

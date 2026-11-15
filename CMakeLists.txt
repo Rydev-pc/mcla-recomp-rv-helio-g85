@@ -139,6 +139,12 @@ if(MINGW)
     endif()
 endif()
 
+# Build the Vulkan driver proxy for Android (system driver or custom driver
+# loading via libadrenotools). Output goes to app/src/main/jniLibs/arm64-v8a/.
+if(ANDROID)
+    add_subdirectory(native)
+endif()
+
 if(WIN32)
     # timeBeginPeriod for the frame limiter.
     target_link_libraries(mcla PRIVATE winmm)
