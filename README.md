@@ -93,6 +93,31 @@ device details and likely requirements, see [compatibility and performance](docs
 
 </details>
 
+## Helio G85 / Mali-G52 (experimental)
+
+This fork adds experimental support for **Helio G85 (Mali-G52 MC2) with 4 GB RAM**.
+Mali support was discontinued in the upstream project
+(`docs/android-mali-driver.md`) because the stock driver lacks
+`vertexPipelineStoresAndAtomics` and PanVK has WSI/gralloc issues on Android.
+This fork re-introduces an isolated, reversible Mali path:
+
+- **Build:** `scripts/build_android_helio_g85.sh release` (requires Android NDK)
+- **CMake preset:** `android-arm64-helio-g85-release`
+- **Memory:** reduced EDRAM tiles (2048), GPU pressure at 75%, 720p render target,
+  anisotropic filtering off, no MSAA, no real-time shadows, lower LOD/density
+- **Vulkan:** relaxed gate for `vertexPipelineStoresAndAtomics` (draws are attempted;
+  logs show if a draw is rejected by the command processor)
+- **Launcher:** profile "Helio G85 / Mali / Low RAM" detected via `GPU_VARIANT=mali`
+
+> [!WARNING]
+> Mali support is **experimental and untested on real Helio G85 hardware**. No gameplay
+> has been validated. The stock Mali driver and PanVK both fail on the reference
+> Galaxy A06 / Helio G85 tester. Use at your own risk.
+
+| Device | Result | Source |
+| --- | --- | --- |
+| Helio G85 · Mali-G52 MC2 · 4 GB | Experimental; not validated for gameplay | This fork (docs/PLAN_HELIO_G85.md) |
+
 ## Need help?
 
 Check the [known issues](KNOWN-ISSUES.md) before opening a
