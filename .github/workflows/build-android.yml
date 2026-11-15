@@ -30,7 +30,11 @@ jobs:
       - name: Install NDK r27c
         run: sdkmanager "ndk;27.2.12479018"
       - name: Configure Android environment
-        run: echo "ANDROID_NDK=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+        run: |
+          echo "ANDROID_NDK=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
 
       - name: Install build tools
         run: sudo apt-get update && sudo apt-get install -y ninja-build cmake
@@ -61,6 +65,11 @@ jobs:
         run: |
           cp "$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" \
              app/src/main/jniLibs/arm64-v8a/
+
+      - name: Create local.properties for Gradle
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "ndk.dir=$ANDROID_HOME/ndk/27.2.12479018" >> local.properties
 
       - name: Build driver proxy
         run: bash -euxo pipefail scripts/build_driver_proxy.sh
