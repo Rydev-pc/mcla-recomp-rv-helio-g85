@@ -1,68 +1,43 @@
-# User-supplied game data and anything derived from it. Never commit.
-*.iso
-*.xex
-*.xexp
-*.rpf
-*.bik
-*.pe
-*.bin
-*.god
-/private/
-# /game and /third_party are local symlinks into the older full checkout on the
-# maintainer's machine. These patterns must not end with a slash: a trailing
-# slash matches directories only, and a symlink would then be staged by
-# "git add -A" and leak a machine-local path into the public repository.
-/game
-/extracted/
-/dump/
-/generated/*
-!/generated/rexglue.cmake
-/shaderpack/
-*.shaderpack
-
-# Keys
-*.key
-*.keystore
-*.jks
-*.p12
-*.pfx
-*.pem
-keys.*
-
-# Build output
-/build/
-/out/
-*.elf
-*.self
-*.pkg
-*.obj
+# Build artifacts
+out/
+build/
 *.o
-*.pdb
-*.exe
-*.dll
+*.a
 *.so
 *.apk
-# /third_party is a local symlink as well; see the /game note above.
-/third_party
-/tools/
-/out/
+*.aab
+*.dex
+*.zip
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
 
-# The archived Windows play shortcut makes
-*.lnk
+# Gradle
+.gradle/
+app/build/
 
-# Working notes and developer tools: kept on the maintainer's machine, not
-# published. The README and docs/ are the public documentation.
-/REFLECTION_FIX.md
-/scripts/analyze_perf.py
-/scripts/fps_sweep.ps1
-/scripts/play_loop.ps1
-/scripts/profile_report.py
-/scripts/recover_loop.ps1
-/scripts/smoke_run.ps1
-/scripts/sweep_stats.py
-/scripts/thread_profile.ps1
+# Android
+local.properties
+keystore.properties
+*.keystore
+*.jks
 
-# Python bytecode
+# Python
 __pycache__/
 *.pyc
+
+# Generated (recompile output)
+generated/
