@@ -73,6 +73,7 @@ set(MCLA_SOURCES
 
 if(ANDROID)
     list(APPEND MCLA_SOURCES src/touch_controls.cpp)
+    list(APPEND MCLA_SOURCES src/mcla_android_defaults.cpp)
     # Target profile selection: snapdragon (default) or helio-g85 (Mali-G52, low RAM).
     # The Mali path is experimental: stock Mali drivers lack vertexPipelineStoresAndAtomics,
     # and PanVK has WSI/gralloc issues on Android. See docs/android-mali-driver.md.
@@ -83,6 +84,18 @@ if(ANDROID)
         add_link_options(-Os)
     else()
         message(STATUS "MCLA: Building for Snapdragon / Adreno (default)")
+    endif()
+    # Android 15+ devices may run on 16 KB memory pages. Align LOAD segments
+    # and shared-library segments to 16 KB, as recommended by Android.
+    add_link_options(
+        "$<$<CONFIG:Release>:-Wl,-z,max-page-size=16384>"
+        "$<$<CONFIG:Release>:-Wl,-z,common-page-size=16384>"
+    )
+    # ThinLTO for Android Release builds: optimize hot guest call chains across
+    # translation units without the memory cost of full LTO (important on 4 GB RAM).
+    if(CMAKE_BUILD_TYPE STREQUAL "Release")
+        add_compile_options(-flto=thin)
+        add_link_options(-flto=thin)
     endif()
 endif()
 

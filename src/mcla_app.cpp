@@ -116,6 +116,9 @@ void MclaShaderStorageAfterPreload(rex::Runtime* runtime);
 void MclaMigrateAntiAliasing();  // src/perf_options.cpp
 void MclaApplyPreset();  // src/perf_options.cpp
 void MclaApplyGraphicsFixDefaults(bool vulkan);  // src/perf_options.cpp
+#if defined(__ANDROID__)
+void MclaApplyAndroidDefaults();  // src/mcla_android_defaults.cpp
+#endif
 #if defined(MCLA_TARGET_HELIO_G85)
 void MclaApplyHelioG85Defaults();  // src/perf_options.cpp
 #endif
@@ -1156,6 +1159,9 @@ void MclaApp::ApplyPcDefaults() {
   const bool any_is_vulkan = true;
 #endif
   MclaApplyGraphicsFixDefaults(backend == "vulkan" || (backend == "any" && any_is_vulkan));
+#if defined(__ANDROID__)
+  MclaApplyAndroidDefaults();
+#endif
 }
 
 // As PC games do with a controller: the pointer goes away during play and
